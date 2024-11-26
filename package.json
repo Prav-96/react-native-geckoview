@@ -1,5 +1,5 @@
 {
-  "name": "@ammarahmed/react-native-geckoview",
+  "name": "@kauza/react-native-geckoview",
   "title": "React Native GeckoView",
   "version": "1.4.0",
   "description": "GeckoView implementation on android for React Native.",
@@ -9,8 +9,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ammarahm-ed/react-native-geckoview.git",
-    "baseUrl": "https://github.com/ammarahm-ed/react-native-geckoview"
+    "url": "git+https://github.com/Kauza/react-native-geckoview.git",
+    "baseUrl": "https://github.com/Kauza/react-native-geckoview"
   },
   "keywords": [
     "react-native",
