@@ -1,7 +1,7 @@
 {
   "name": "@kauza/react-native-geckoview",
   "title": "React Native GeckoView",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "GeckoView implementation on android for React Native.",
   "main": "./index.tsx",
   "scripts": {
