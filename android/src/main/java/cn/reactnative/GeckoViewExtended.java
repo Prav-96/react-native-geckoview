@@ -7,6 +7,9 @@ import android.graphics.Color;
 import android.util.Log;
 import android.view.ContentInfo;
 import android.view.ViewGroup;
+import android.app.DownloadManager;
+import android.net.Uri;
+import android.os.Environment;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,6 +34,7 @@ import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebRequestError;
+import org.mozilla.geckoview.WebResponse;
 
 import com.facebook.react.views.scroll.ScrollEventType;
 import com.google.gson.*;
@@ -80,6 +84,7 @@ public class GeckoViewExtended extends GeckoView implements WebExtension.Message
         GeckoViewExtended view = this;
         if (mExtension != null) {
             mMessageToSendOnConnect = object;
+            Log.d("GKEDConnectMessagingPort", object.toString());
             mExtension.setMessageDelegate(view,"browser");
             rt.getWebExtensionController().update(mExtension);
             return;
@@ -126,10 +131,45 @@ public class GeckoViewExtended extends GeckoView implements WebExtension.Message
         return GeckoSession.NavigationDelegate.super.onLoadRequest(session, request);
     }
 
+    @Override
+    public void onExternalResponse(@NonNull GeckoSession session, @NonNull WebResponse response){
+        try {
+            Log.d("GKEDonExternalResponse", "tappedEXT");
+
+            String url = response.uri;
+            Log.d("GKEDonExternalResponse", url);
+
+            if (url != null && !url.isEmpty()) {
+                Uri uri = Uri.parse(url);
+                String filename = url.substring(url.lastIndexOf("/") + 1);
+
+                DownloadManager.Request request = new DownloadManager.Request(uri);
+                request.setTitle(filename);
+                request.setDescription(filename);
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
+                request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+
+                DownloadManager downloadManager = (DownloadManager) reactContext.getSystemService(Context.DOWNLOAD_SERVICE);
+                long downloadId = downloadManager.enqueue(request);
+
+                Log.d("GKEDonExternalResponse", "Download enqueued with ID: " + downloadId);
+                WritableMap map = Arguments.createMap();
+                map.putString("message","Download enqueued with ID: " + downloadId);
+                map.putString("uri",url);
+                dispatchEvent(this, GeckoViewExtendedEvents.message,map);
+            } else {
+                Log.d("GKEDonExternalResponse", "URL is null or empty");
+            }
+        } catch (Exception e) {
+            Log.e("GKEDonExternalResponse", "Error in content download: ", e);
+        }
+    }
+
     @Nullable
     @Override
     public GeckoResult<PromptResponse> onAlertPrompt(@NonNull GeckoSession session, @NonNull AlertPrompt prompt) {
-        Log.d("GeckoAlert",prompt.message + prompt.title);
+        Log.d("GKEDAlert",prompt.message + prompt.title);
         AlertDialog dialog = new AlertDialog.Builder(reactContext).setTitle(prompt.title).setMessage(prompt.message).setCancelable(true).create();
         dialog.show();
         return GeckoSession.PromptDelegate.super.onAlertPrompt(session, prompt);
@@ -274,7 +314,7 @@ public class GeckoViewExtended extends GeckoView implements WebExtension.Message
     @Nullable
     @Override
     public GeckoResult<Object> onMessage(@NonNull String nativeApp, @NonNull Object message, @NonNull WebExtension.MessageSender sender) {
-        Log.d("MessageDelegate","message" + message);
+        Log.d("GKEDonMessage", message.toString());
         if (message instanceof JSONObject) {
             WritableMap map = Arguments.createMap();
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -292,7 +332,7 @@ public class GeckoViewExtended extends GeckoView implements WebExtension.Message
                 object.put("inject", mInjectedJavaScript);
                 this.messagePort.postMessage(object);
             } catch (JSONException e) {
-                Log.d("GeckoViewExtended", e.getMessage());
+                Log.d("GKEDInjectOnLoad", e.getMessage());
             }
         }
     }
@@ -301,7 +341,7 @@ public class GeckoViewExtended extends GeckoView implements WebExtension.Message
     @Override
     public void onConnect(@NonNull WebExtension.Port port) {
         WebExtension.MessageDelegate.super.onConnect(port);
-        Log.d("PortConnect","onConnect" + port);
+        Log.d("GKEDPortConnect","onConnect" + port);
         this.messagePort = port;
         injectJavascript();
         if (mMessageToSendOnConnect != null) {
@@ -315,7 +355,7 @@ public class GeckoViewExtended extends GeckoView implements WebExtension.Message
     public void onPortMessage(@NonNull Object message, @NonNull WebExtension.Port port) {
         WebExtension.PortDelegate.super.onPortMessage(message, port);
         messagePort = port;
-        Log.d("PortMessage","message" + message);
+        Log.d("GKEDPortMessage", message.toString());
         if (message instanceof JSONObject) {
             WritableMap map = Arguments.createMap();
             Gson gson = new GsonBuilder().setPrettyPrinting().create();

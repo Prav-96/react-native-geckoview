@@ -2,11 +2,30 @@
 
 A fully functional implementation of `GeckoView` on android for react native. The component supports two-way messaging similar to react-native-webview.
 
-## Installation
+## Getting started
 
-```
-yarn add @ammarahmed/react-native-geckoview
-```
+1. Add the following to your `build.gradle`'s repositories section. (`android/build.gradle`)
+
+    ```gradle
+    allprojects {
+        repositories {
+        // ...
+        // ...
+
+        // ADD THIS
+        maven {
+            url "https://maven.mozilla.org/maven2/"
+        }
+        }
+    }
+    ```
+2. (Optional) Update ProGuard config. Append the following lines to your ProGuard config (`android/proguard-rules.pro`):
+
+    ```
+    -keep class org.mozilla.geckoview.** { *; }
+    -keep class org.mozilla.gecko.** { *; }
+    -dontwarn org.mozilla.gecko.**
+    ```
 
 ## Basic Example
 

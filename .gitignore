@@ -22,3 +22,4 @@ buck-out/
 *.keystore
 
 .yarn/
+yarn.lock
