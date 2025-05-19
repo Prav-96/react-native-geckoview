@@ -3,7 +3,7 @@ console.log(`content:start`);
 let ReactNativeWebView = {
   postMessage: function (message) {
     browser.runtime.sendMessage({
-      action: 'ReactNativeWebView',
+      action: "ReactNativeWebView",
       data: message,
     });
   },
@@ -14,32 +14,39 @@ window.wrappedJSObject.ReactNativeWebView = cloneInto(
   window,
   {
     cloneFunctions: true,
-  },
+  }
 );
+
+function injectScript(content) {
+  const script = document.createElement("script");
+  script.textContent = content;
+  (document.head || document.documentElement).appendChild(script);
+  script.remove();
+}
 
 browser.runtime.onMessage.addListener((data, sender) => {
   if (data.inject) {
     try {
-      window.eval(data.inject);
+      injectScript(data.inject);
     } catch (e) {
-      return Promise.resolve();
+      console.warn("Script injection failed:", e);
     }
     return Promise.resolve();
   } else {
-    var event;
+    let event;
     try {
       // eslint-disable-next-line no-undef
-      event = new MessageEvent('message', data);
+      event = new MessageEvent("message", data);
     } catch (e) {
-      event = document.createEvent('MessageEvent');
+      event = document.createEvent("MessageEvent");
       event.initMessageEvent(
-        'message',
+        "message",
         true,
         true,
         data.data,
         data.origin,
         data.lastEventId,
-        data.source,
+        data.source
       );
     }
     document.dispatchEvent(event);
